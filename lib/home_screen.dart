@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_search/home_view_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -8,18 +9,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final TextEditingController textEditingController;
+  late final TextEditingController _textEditingController;
+  final viewModel = HomeViewModel();
+  bool _isSearching = false;
 
   @override
   void initState() {
-    textEditingController = TextEditingController();
+    _textEditingController = TextEditingController();
     super.initState();
   }
 
   @override
   void dispose() {
-    textEditingController.dispose();
+    _textEditingController.dispose();
     super.dispose();
+  }
+
+  Future<void> searchImage() async {
+    setState(() {
+      _isSearching = true;
+    });
+
+    await viewModel.search(_textEditingController.text);
+
+    setState(() {
+      _isSearching = false;
+    });
   }
 
   @override
@@ -33,25 +48,29 @@ class _HomeScreenState extends State<HomeScreen> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(
-                controller: textEditingController,
+                controller: _textEditingController,
                 decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(Icons.search),
-                      onPressed: () {
-                        print(textEditingController.text);
-                      },
-                    )),
+                  border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: () {
+                      searchImage();
+                    },
+                  ),
+                ),
               ),
             ),
+            _isSearching
+                ? const Center(child: CircularProgressIndicator())
+            :
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: GridView.builder(
-                  itemCount: 16,
+                  itemCount: viewModel.images.length,
                   itemBuilder: (context, index) {
                     return Image.network(
-                      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIUAkrSLo1iSiHf5fBIwUZUz_FqXroGpBj12zIWnic7g&s',
+                      viewModel.images[index].imageUrl,
                       fit: BoxFit.cover,
                     );
                   },
